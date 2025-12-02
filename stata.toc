@@ -1,0 +1,14 @@
+v 3
+d Stata Utilities Repository
+d
+d Distribution-Date: 20251202
+d
+d This repository contains Stata utilities for:
+d - fixencoding: Character encoding conversion utility
+d - ssiv: Shift-Share Instrumental Variables analysis
+d
+d Author: Multiple contributors
+d Support: GitHub issues
+d
+p fixencoding Character encoding conversion utility for .dta files
+p ssiv Shift-Share Instrumental Variables (Bartik IV) analysis
