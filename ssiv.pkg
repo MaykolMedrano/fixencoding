@@ -2,6 +2,7 @@ v 3
 d ssiv: Shift-Share Instrumental Variables Analysis
 d
 d Distribution-Date: 20251202
+d Version: 1.0.1
 d
 d This package implements shift-share (Bartik) instrumental variables
 d estimation for Stata. It automates the construction of shift-share
@@ -13,6 +14,14 @@ d - Automatic shift-share IV construction
 d - First-stage diagnostics and weak instrument tests
 d - Support for clustering and robust standard errors
 d - Comprehensive output and stored results
+d - Example datasets and complete tutorials
+d
+d What's new in v1.0.1:
+d - Fixed bug with temporary variable naming conflicts
+d - Added validation for instrument variation
+d - Added error checking for multiple endogenous variables
+d - Improved instrument saving functionality
+d - Three complete example datasets included
 d
 d Author: Claude Code
 d Support: GitHub repository
@@ -26,4 +35,7 @@ d
 f ssiv.ado
 f ssiv.sthlp
 f example_ssiv.do
+f example_ssiv_with_data.do
+f create_example_data.do
 f SSIV_README.md
+f BUGFIXES.md

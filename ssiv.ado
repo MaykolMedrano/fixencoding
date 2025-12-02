@@ -1,4 +1,4 @@
-*! ssiv v1.0.0
+*! ssiv v1.0.1
 *! Shift-Share Instrumental Variables Analysis
 *! Implements Bartik-style shift-share IV estimation
 *! Author: Claude Code
@@ -48,23 +48,22 @@ program define ssiv, eclass
     // Calculate the shift-share IV: Z_l = sum_k (s_lk * g_k)
     // where s_lk = shares and g_k = shocks
     quietly {
-        bysort `location': egen `instrument' = total(`shares' * `shocks') if `touse'
+        bysort `location' (`sector'): egen `instrument' = total(`shares' * `shocks') if `touse'
 
         // Count observations
         count if `touse'
         local N = r(N)
 
-        // Count locations
-        bysort `location': gen _temp_loc = (_n == 1) if `touse'
-        count if _temp_loc == 1
+        // Count locations - use tempvar to avoid conflicts
+        tempvar temp_loc temp_sec
+        bysort `location': gen `temp_loc' = (_n == 1) if `touse'
+        count if `temp_loc' == 1
         local N_locations = r(N)
-        drop _temp_loc
 
         // Count sectors
-        bysort `sector': gen _temp_sec = (_n == 1) if `touse'
-        count if _temp_sec == 1
+        bysort `sector': gen `temp_sec' = (_n == 1) if `touse'
+        count if `temp_sec' == 1
         local N_sectors = r(N)
-        drop _temp_sec
     }
 
     display as text "  Observations: " as result `N'
@@ -73,8 +72,17 @@ program define ssiv, eclass
 
     // Save instrument if requested
     if "`saveinstrument'" != "" {
+        capture drop `saveinstrument'
         quietly gen `saveinstrument' = `instrument' if `touse'
         display as text "  Instrument saved as: " as result "`saveinstrument'"
+    }
+
+    // Check for instrument variation
+    quietly summarize `instrument' if `touse'
+    if r(sd) == 0 | r(sd) == . {
+        display as error _newline "Error: Shift-share instrument has no variation"
+        display as error "Check that shares and shocks are properly specified"
+        exit 198
     }
 
     // Step 2: First stage regression
@@ -93,6 +101,14 @@ program define ssiv, eclass
 
     if "`weight'" != "" {
         local weight_option "[`weight' `exp']"
+    }
+
+    // Count number of endogenous variables
+    local n_endog : word count `endogenous'
+    if `n_endog' > 1 {
+        display as error _newline "Error: Multiple endogenous variables not yet supported"
+        display as error "Current version supports only one endogenous variable"
+        exit 198
     }
 
     // Run first stage
