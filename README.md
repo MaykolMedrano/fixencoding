@@ -2,140 +2,238 @@
 
 <p align="left">
   <img src="https://img.shields.io/badge/Stata-v14%2B-blue" alt="Stata Version">
-  <img src="https://img.shields.io/badge/Release-v2.0-blue" alt="Current Release">
-  <img src="https://img.shields.io/badge/Updated-July_2025-green" alt="Last Updated">
+  <img src="https://img.shields.io/badge/Release-v3.0-blue" alt="Current Release">
+  <img src="https://img.shields.io/badge/Updated-December_2025-green" alt="Last Updated">
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
 </p>
 
-[Instalación](#instalación) | [Sintaxis](#sintaxis-del-comando) | [Ejemplos](#ejemplos-de-uso) | [Historial de Versiones](#historial-de-versiones) | [Licencia](#licencia)
+[Instalación](#instalación) | [Sintaxis](#sintaxis-del-comando) | [Opciones](#opciones) | [Ejemplos](#ejemplos-de-uso) | [Historial](#historial-de-versiones)
 
 ---
 
 ## Resumen
 
-El programa `fixencoding` es una utilidad para Stata que simplifica y automatiza la corrección de la codificación de caracteres en archivos de datos (`.dta`). Actúa como un contenedor (wrapper) del comando nativo `unicode translate`, permitiendo el procesamiento por lotes de múltiples archivos a través de una sintaxis clara y concisa.
+`fixencoding` es una utilidad robusta para Stata que simplifica y automatiza la corrección de la codificación de caracteres en archivos de datos (`.dta`). Actúa como un wrapper mejorado del comando nativo `unicode translate`, ofreciendo:
 
-Esta herramienta está diseñada para resolver problemas comunes de visualización de caracteres especiales (acentos, ñ, etc.) que surgen al trabajar con datasets creados en diferentes sistemas operativos o versiones antiguas de Stata.
-
-## Tabla de Contenidos
-1. [Descripción General](#descripción-general)
-2. [Características Principales](#características-principales)
-3. [Requisitos Previos](#requisitos-previos)
-4. [Instalación](#instalación)
-5. [Sintaxis del Comando](#sintaxis-del-comando)
-6. [Parámetros y Opciones](#parámetros-y-opciones)
-7. [Ejemplos de Uso](#ejemplos-de-uso)
-8. [Código Fuente](#código-fuente-del-programa)
-9. [Historial de Versiones](#historial-de-versiones)
-10. [Licencia](#licencia)
-
-## Descripción General
-
-En el análisis de datos es frecuente encontrar archivos `.dta` con problemas de codificación. Esto ocurre cuando un archivo guardado con una codificación heredada (ej. `latin1`, `windows-1252`) se abre en una sesión de Stata moderna que utiliza `UTF-8`. El resultado es la incorrecta representación de caracteres no ingleses.
-
-`fixencoding` abstrae la lógica de `unicode translate` en un único comando robusto que puede operar sobre un conjunto de archivos especificado mediante comodines, mejorando significativamente la eficiencia del flujo de trabajo de preparación de datos.
+- Procesamiento por lotes con soporte de comodines
+- Respaldos automáticos antes de modificar
+- Modo dry-run para previsualizar cambios
+- Manejo robusto de errores
+- Resultados programáticos vía `return list`
 
 ## Características Principales
 
-* **Procesamiento por Lotes:** Permite convertir múltiples archivos `.dta` con una sola línea de código.
-* **Instalación Sencilla:** Se instala directamente desde un repositorio online usando `net install`.
-* **Sintaxis Simplificada:** Ofrece una interfaz de usuario clara y directa para una tarea compleja.
-* **Integración Completa:** Soporta las opciones más importantes de `unicode translate`.
+| Característica | Descripción |
+|---------------|-------------|
+| **Procesamiento por Lotes** | Convierte múltiples archivos `.dta` con una sola línea de código |
+| **Respaldos Automáticos** | Opción `backup` para crear copias de seguridad antes de modificar |
+| **Modo Dry-Run** | Opción `noexecute` para ver qué archivos se procesarían sin hacer cambios |
+| **Manejo de Errores** | Continúa procesando otros archivos si uno falla, con resumen detallado |
+| **Resultados Almacenados** | Acceso programático a estadísticas vía `r()` |
+| **Salida Configurable** | Opciones `quiet` y `verbose` para controlar mensajes |
 
 ## Requisitos Previos
 
-* **Stata versión 14 o superior.**
-* **Conexión a internet** para la instalación directa.
+- **Stata versión 14 o superior**
+- **Conexión a internet** para instalación directa
 
 ## Instalación
 
-El paquete se puede instalar directamente desde su repositorio online.
-
-Ejecute los siguientes comandos en la consola de Stata:
+### Desde el Repositorio Online
 
 ```stata
-// 1. Opcional: desinstalar cualquier versión anterior para asegurar una instalación limpia
+// Desinstalar versión anterior (opcional)
 capture ado uninstall fixencoding
 
-// 2. Instalar desde el repositorio online
-net install fixencoding, from("[https://raw.githubusercontent.com/nombre-de-usuario/fixencoding/main/](https://raw.githubusercontent.com/nombre-de-usuario/fixencoding/main/)")
+// Instalar desde GitHub
+net install fixencoding, from("https://raw.githubusercontent.com/MaykolMedrano/fixencoding/main/")
 ```
-
-> **Nota Importante:** La URL anterior es un ejemplo. Si usted aloja este código, debe reemplazar `"nombre-de-usuario/fixencoding"` con su nombre de usuario y el nombre de su repositorio en GitHub. Para que `net install` funcione, la carpeta en el repositorio debe contener el archivo `fixencoding.ado` y un archivo `stata.toc`.
 
 ### Instalación Manual
 
-Si prefiere una instalación local, copie el [código fuente](#código-fuente-del-programa) y guárdelo en un archivo llamado `fixencoding.ado` dentro de su directorio `PERSONAL` de Stata. (Use `findit personal` para encontrar la ruta).
+Descargue `fixencoding.ado` y `fixencoding.sthlp` y cópielos a su directorio PERSONAL de Stata:
+
+```stata
+// Encontrar el directorio PERSONAL
+sysdir
+```
 
 ## Sintaxis del Comando
 
 ```stata
-fixencoding filelist , from(encoding) [replace to(encoding) translatelog(newfile)]
+fixencoding filelist , from(encoding) [options]
 ```
 
-## Parámetros y Opciones
+## Opciones
 
-* `filelist` (Requerido): Especifica el archivo o los archivos a procesar. Acepta el nombre de un único archivo (`"datos.dta"`) o un patrón con comodines (`"*.dta"`).
-* `from(encoding)` (Requerido): Define la codificación de origen de los archivos. Ejemplos: `latin1`, `windows-1252`.
-* `replace` (Opcional): Autoriza al comando a sobrescribir los archivos originales. **Sin esta opción, los cambios no se guardarán.**
-* `to(encoding)` (Opcional): Define la codificación de destino. Por defecto, es la de la sesión actual (`UTF-8`).
-* `translatelog(newfile)` (Opcional): Genera un informe de texto detallado de la traducción.
+### Requeridas
+
+| Opción | Descripción |
+|--------|-------------|
+| `from(encoding)` | Codificación de origen de los archivos (ej: `latin1`, `windows-1252`) |
+
+### Principales
+
+| Opción | Descripción |
+|--------|-------------|
+| `replace` | Sobrescribir los archivos originales con las versiones convertidas |
+| `to(encoding)` | Codificación de destino (por defecto: codificación de la sesión) |
+| `translatelog(filename)` | Guardar log de traducción en archivo |
+
+### Seguridad
+
+| Opción | Descripción |
+|--------|-------------|
+| `backup` | Crear respaldo de cada archivo antes de la conversión |
+| `backupsuffix(string)` | Sufijo para archivos de respaldo (por defecto: `"_backup"`) |
+| `noexecute` | Modo dry-run: muestra qué se haría sin hacer cambios |
+| `stoponfail` | Detener procesamiento en el primer error |
+
+### Salida
+
+| Opción | Descripción |
+|--------|-------------|
+| `quiet` | Suprimir mensajes de progreso |
+| `verbose` | Mostrar información detallada |
 
 ## Ejemplos de Uso
 
-### Ejemplo 1: Convertir un único archivo
-```stata
-fixencoding "encuesta nacional 2010.dta", from(latin1) replace
-```
+### Uso Básico
 
-### Ejemplo 2: Convertir todos los archivos de una carpeta
 ```stata
+// Convertir un único archivo
+fixencoding "encuesta2020.dta", from(latin1) replace
+
+// Convertir todos los archivos .dta del directorio
 fixencoding *.dta, from(windows-1252) replace
 ```
 
-### Ejemplo 3: Uso avanzado con registro de traducción
+### Con Respaldo de Seguridad
+
 ```stata
-fixencoding ENH-*.dta, from(latin1) replace translatelog(reporte_conversion.txt)
+// Crear respaldo antes de convertir
+fixencoding datos.dta, from(latin1) replace backup
+
+// Respaldo con sufijo personalizado
+fixencoding datos.dta, from(latin1) replace backup backupsuffix(_original)
+// Crea: datos_original.dta
 ```
 
-## Código Fuente del Programa
+### Modo Dry-Run (Previsualización)
+
 ```stata
-* --- Código para crear el comando fixencoding (Versión 2.0) ---
-capture program drop fixencoding
-program define fixencoding
-    
-    // Define la sintaxis del comando y sus opciones
-    syntax anything(name=filelist), from(string) [replace to(string) translatelog(string)]
-    
-    // Bucle para procesar cada archivo en la lista proporcionada
-    foreach f of local filelist {
-        display as text "Traduciendo archivo: `f'..."
-        
-        // Ejecuta unicode translate pasando las opciones
-        unicode translate "`f'", from("`from'") to("`to'") translatelog("`translatelog'") `replace'
-        
-        display as result "  -> Traducción completada."
-    }
-end
-* --- Fin del código ---
+// Ver qué archivos se procesarían sin hacer cambios
+fixencoding proyecto_*.dta, from(latin1) noexecute
+```
+
+### Procesamiento Silencioso para Scripts
+
+```stata
+// Ejecutar sin mensajes, verificar resultados programáticamente
+fixencoding *.dta, from(latin1) replace quiet
+
+// Ver resultados
+display "Archivos procesados: " r(files_success)
+display "Archivos fallidos: " r(files_failed)
+```
+
+### Múltiples Patrones de Archivos
+
+```stata
+// Combinar archivo específico con patrón
+fixencoding "encuesta nacional.dta" survey_*.dta, from(latin1) replace backup
+```
+
+### Con Registro de Traducción
+
+```stata
+// Guardar log detallado de la conversión
+fixencoding *.dta, from(latin1) replace translatelog(conversion_log.txt)
+```
+
+## Resultados Almacenados
+
+Después de ejecutar `fixencoding`, los siguientes valores están disponibles en `r()`:
+
+### Escalares
+
+| Resultado | Descripción |
+|-----------|-------------|
+| `r(files_total)` | Total de archivos encontrados |
+| `r(files_success)` | Archivos convertidos exitosamente |
+| `r(files_failed)` | Archivos que fallaron |
+| `r(files_skipped)` | Archivos omitidos (no-.dta o sin coincidencias) |
+
+### Macros
+
+| Resultado | Descripción |
+|-----------|-------------|
+| `r(encoding_from)` | Codificación de origen especificada |
+| `r(encoding_to)` | Codificación de destino (si se especificó) |
+| `r(files_processed)` | Lista de archivos procesados exitosamente |
+| `r(files_failed_list)` | Lista de archivos que fallaron |
+
+### Ejemplo de Uso Programático
+
+```stata
+fixencoding *.dta, from(latin1) replace quiet
+
+if r(files_failed) > 0 {
+    display as error "Hubo " r(files_failed) " archivos con errores"
+    display as error "Archivos fallidos: " r(files_failed_list)
+}
+else {
+    display as result "Todos los " r(files_success) " archivos convertidos exitosamente"
+}
+```
+
+## Codificaciones Comunes
+
+| Codificación | Descripción | Uso Común |
+|-------------|-------------|-----------|
+| `latin1` | ISO 8859-1 | Europa Occidental, América Latina |
+| `windows-1252` | CP1252 | Windows en español/europeo |
+| `iso-8859-15` | Latin-9 | Similar a latin1 + símbolo euro |
+| `cp850` | DOS Latin-1 | Archivos DOS antiguos |
+| `macroman` | Mac Roman | Mac OS clásico |
+
+### Detectar Codificación
+
+Use `unicode analyze` para detectar la codificación de sus archivos:
+
+```stata
+unicode analyze *.dta
 ```
 
 ## Historial de Versiones
 
-* **v2.0 (2025-07-28):**
-    * Añadido soporte para las opciones `to()` y `translatelog()`.
-    * Actualizada la documentación para incluir instalación vía `net install`.
-* **v1.0 (2025-07-28):**
-    * Versión inicial con funcionalidad básica de `from()` y `replace`.
+### v3.0 (2025-12-07)
+- Manejo robusto de errores con continuación automática
+- Opción `backup` para crear respaldos automáticos
+- Opción `noexecute` para modo dry-run
+- Opciones `quiet` y `verbose` para controlar salida
+- Opción `stoponfail` para detener en primer error
+- Resultados almacenados en `r()` para uso programático
+- Validación de existencia de archivos
+- Soporte mejorado para comodines
+- Archivo de ayuda integrado (`help fixencoding`)
+- Resumen detallado al finalizar
+
+### v2.0 (2025-07-28)
+- Añadido soporte para `to()` y `translatelog()`
+- Documentación para instalación vía `net install`
+
+### v1.0 (2025-07-28)
+- Versión inicial con `from()` y `replace`
 
 ## Licencia
 
-Este proyecto se distribuye bajo la Licencia MIT.
+MIT License - Copyright (c) 2025
 
-Copyright (c) 2025
+Se concede permiso para usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del Software.
 
-Se concede permiso, por la presente, libre de cargos, a cualquier persona que obtenga una copia de este software y de los archivos de documentación asociados (el "Software"), para tratar en el Software sin restricción, incluyendo sin limitación los derechos de usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar, y/o vender copias del Software, y para permitir a las personas a las que se les proporcione el Software a hacer lo mismo, sujeto a las siguientes condiciones:
+## Véase También
 
-El aviso de copyright anterior y este aviso de permiso se incluirán en todas las copias o porciones sustanciales del Software.
-
-EL SOFTWARE SE PROPORCIONA "COMO ESTÁ", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A GARANTÍAS DE COMERCIABILIDAD, IDONEIDAD PARA UN PROPÓSITO PARTICULAR Y NO INFRACCIÓN. EN NINGÚN CASO LOS AUTORES O TITULARES DEL COPYRIGHT SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑO U OTRA RESPONSABILIDAD, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O CUALQUIER OTRO MOTIVO, QUE SURJA DE, FUERA DE O EN CONEXIÓN CON EL SOFTWARE O EL USO U OTROS TRATOS EN EL SOFTWARE.
+- `help unicode translate` - Comando nativo de Stata
+- `help unicode analyze` - Detectar codificación de archivos
+- `help unicode encoding` - Lista de codificaciones soportadas
