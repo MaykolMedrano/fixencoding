@@ -1,15 +1,24 @@
 v 3
 d fixencoding: Character Encoding Conversion Utility
 d
-d Distribution-Date: 20251202
+d Distribution-Date: 20251207
 d
-d This package provides a simple wrapper around Stata's unicode translate
-d command, enabling batch processing of multiple .dta files with a single
-d command.
+d A robust wrapper around Stata's unicode translate command that enables
+d batch processing of multiple .dta files with a single command. Version 3.0
+d includes enhanced error handling, backup functionality, dry-run mode,
+d verbose output, and programmatic access via stored results.
+d
+d Features:
+d   - Batch processing with wildcard support
+d   - Automatic backup before conversion
+d   - Dry-run mode to preview changes
+d   - Detailed progress reporting
+d   - Stored results for programmatic use
 d
 d Author: Multiple contributors
-d Support: GitHub repository
+d Support: https://github.com/MaykolMedrano/fixencoding
 d
 d Requires: Stata version 14 or higher
 d
 f fixencoding.ado
+f fixencoding.sthlp
